@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 database.db
 venv/
+add_login_link.py
+fix_nav.py

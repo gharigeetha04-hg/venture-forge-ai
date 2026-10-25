@@ -1,0 +1,27 @@
+{% extends "auth_base.html" %}
+{% block title %}Sign up – Venture Forge AI{% endblock %}
+{% block content %}
+<div class="container auth-wrap">
+  <div class="auth-card">
+    <h1>Create your account</h1>
+    <p class="page-sub">Save your reports and find them again anytime.</p>
+    {% if error %}<div class="alert alert-error"><span class="alert-icon">⚠️</span> {{ error }}</div>{% endif %}
+    <form method="post" class="auth-form">
+      <label>Name
+        <input type="text" name="name" value="{{ form.get('name', '') }}" required maxlength="60" autofocus autocomplete="name">
+      </label>
+      <label>Email
+        <input type="email" name="email" value="{{ form.get('email', '') }}" required autocomplete="email">
+      </label>
+      <label>Password <small>(min 8 characters)</small>
+        <input type="password" name="password" required minlength="8" autocomplete="new-password">
+      </label>
+      <label>Confirm password
+        <input type="password" name="confirm" required minlength="8" autocomplete="new-password">
+      </label>
+      <button type="submit" class="btn btn-primary btn-lg">Sign up</button>
+    </form>
+    <p class="auth-alt">Already have an account? <a href="{{ url_for('login') }}" class="accent">Login</a></p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "auth_base.html" %}
+{% block title %}Login – Venture Forge AI{% endblock %}
+{% block content %}
+<div class="container auth-wrap">
+  <div class="auth-card">
+    <h1>Welcome back</h1>
+    <p class="page-sub">Log in to see your saved reports.</p>
+    {% if error %}<div class="alert alert-error"><span class="alert-icon">⚠️</span> {{ error }}</div>{% endif %}
+    <form method="post" class="auth-form">
+      <input type="hidden" name="next" value="{{ next }}">
+      <label>Email
+        <input type="email" name="email" value="{{ email }}" required autofocus autocomplete="email">
+      </label>
+      <label>Password
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+      <button type="submit" class="btn btn-primary btn-lg">Login</button>
+    </form>
+    <p class="auth-alt">New here? <a href="{{ url_for('signup') }}" class="accent">Create an account</a></p>
+  </div>
+</div>
+{% endblock %}

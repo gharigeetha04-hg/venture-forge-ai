@@ -1,0 +1,51 @@
+{% extends "auth_base.html" %}
+{% block title %}My Profile – Venture Forge AI{% endblock %}
+{% block content %}
+<div class="container page-container">
+  <div class="page-header">
+    <h1>Hi, <span class="gradient-text">{{ user['name'] }}</span></h1>
+    <p class="page-sub">{{ user['email'] }} · Member since {{ user['created_at'][:10] }}</p>
+  </div>
+
+  {% if msg %}<div class="alert alert-ok">✅ {{ msg }}</div>{% endif %}
+  {% if error %}<div class="alert alert-error"><span class="alert-icon">⚠️</span> {{ error }}</div>{% endif %}
+
+  <section class="profile-block">
+    <h2>My reports ({{ reports|length }})</h2>
+    {% if reports %}
+      <ul class="profile-reports">
+        {% for r in reports %}
+        <li>
+          <a href="{{ url_for('report', report_id=r['id']) }}">
+            <strong>{{ r['startup_name'] }}</strong>
+            <span class="muted">{{ r['created_at'][:10] }}{% if r['demo_mode'] %} · demo{% endif %}</span>
+            <p>{{ r['snippet'] }}</p>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No reports yet. <a href="{{ url_for('analyze') }}" class="accent">Analyze your first idea →</a></p>
+    {% endif %}
+  </section>
+
+  <section class="profile-block">
+    <h2>Change name</h2>
+    <form method="post" class="auth-form">
+      <input type="hidden" name="action" value="name">
+      <label>Name <input type="text" name="name" value="{{ user['name'] }}" required maxlength="60"></label>
+      <button type="submit" class="btn btn-secondary">Save</button>
+    </form>
+  </section>
+
+  <section class="profile-block">
+    <h2>Change password</h2>
+    <form method="post" class="auth-form">
+      <input type="hidden" name="action" value="password">
+      <label>Current password <input type="password" name="old_password" required autocomplete="current-password"></label>
+      <label>New password <small>(min 8 characters)</small> <input type="password" name="new_password" required minlength="8" autocomplete="new-password"></label>
+      <button type="submit" class="btn btn-secondary">Update password</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Venture Forge AI{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="{% if current_user %}{{ url_for('index') }}{% else %}{{ url_for('login') }}{% endif %}" class="nav-logo">Venture Forge AI</a>
+      <nav class="nav-links">
+        {% if current_user %}
+          <a href="{{ url_for('index') }}">Home</a>
+          <a href="{{ url_for('analyze') }}">Analyze</a>
+          <a href="{{ url_for('history') }}">History</a>
+          <a href="{{ url_for('profile') }}" class="active">{{ current_user['name'] }}</a>
+          <form method="post" action="{{ url_for('logout') }}" class="nav-form">
+            <button type="submit" class="btn btn-ghost">Logout</button>
+          </form>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main class="page-main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

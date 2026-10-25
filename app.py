@@ -10,9 +10,11 @@ import sqlite3
 import tempfile
 import traceback
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
 
-from flask import Flask, request, jsonify, render_template, redirect, url_for, g
+from flask import Flask, request, jsonify, render_template, redirect, url_for, g, session
+from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -44,6 +46,9 @@ HAS_GENAI = HAS_NEW_GENAI or HAS_LEGACY_GENAI
 
 # ── Configuration ──────────────────────────────────────────────────────────
 app = Flask(__name__)
+# Set SECRET_KEY in .env (any long random string). Needed to keep login sessions safe.
+app.secret_key = os.environ.get("SECRET_KEY") or "dev-only-change-me"
+app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax")
 DATABASE = Path("/tmp/database.db") if os.environ.get("VERCEL") else Path(__file__).parent / "database.db"
 MAX_TEXT_CHARS = 15_000  # send at most this many chars to Gemini
 MAX_PDF_BYTES = 10 * 1024 * 1024  # 10 MB
@@ -175,6 +180,21 @@ def init_db():
         )
         """
     )
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            name          TEXT NOT NULL,
+            email         TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            created_at    TEXT NOT NULL
+        )
+        """
+    )
+    # Older databases don't have reports.user_id yet - add it once.
+    cols = [r[1] for r in db.execute("PRAGMA table_info(reports)").fetchall()]
+    if "user_id" not in cols:
+        db.execute("ALTER TABLE reports ADD COLUMN user_id INTEGER")
     db.commit()
     db.close()
 
@@ -316,8 +336,8 @@ def api_analyze():
         db = get_db()
         cur = db.execute(
             """
-            INSERT INTO reports (created_at, input_type, startup_name, snippet, report_json, demo_mode)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO reports (created_at, input_type, startup_name, snippet, report_json, demo_mode, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
@@ -326,6 +346,7 @@ def api_analyze():
                 snippet,
                 json.dumps(report_data),
                 is_demo,
+                session.get("user_id"),
             ),
         )
         db.commit()
@@ -343,7 +364,7 @@ def api_get_reports():
     db = get_db()
     rows = db.execute(
         "SELECT id, created_at, input_type, startup_name, snippet, demo_mode "
-        "FROM reports ORDER BY id DESC"
+        "FROM reports WHERE user_id = ? ORDER BY id DESC", (session["user_id"],)
     ).fetchall()
     return jsonify([dict(r) for r in rows])
 
@@ -352,7 +373,7 @@ def api_get_reports():
 def api_get_report(report_id):
     db = get_db()
     row = db.execute(
-        "SELECT * FROM reports WHERE id = ?", (report_id,)
+        "SELECT * FROM reports WHERE id = ? AND user_id = ?", (report_id, session["user_id"])
     ).fetchone()
     if not row:
         return jsonify({"error": "Report not found."}), 404
@@ -364,7 +385,7 @@ def api_get_report(report_id):
 @app.route("/api/reports/<int:report_id>", methods=["DELETE"])
 def api_delete_report(report_id):
     db = get_db()
-    db.execute("DELETE FROM reports WHERE id = ?", (report_id,))
+    db.execute("DELETE FROM reports WHERE id = ? AND user_id = ?", (report_id, session["user_id"]))
     db.commit()
     return jsonify({"success": True})
 
@@ -385,6 +406,147 @@ def report(report_id):
 @app.route("/history")
 def history():
     return render_template("history.html", demo_mode=DEMO_MODE)
+
+
+# ── Authentication ─────────────────────────────────────────────────────────
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+def current_user():
+    uid = session.get("user_id")
+    if not uid:
+        return None
+    return get_db().execute(
+        "SELECT id, name, email, created_at FROM users WHERE id = ?", (uid,)
+    ).fetchone()
+
+@app.context_processor
+def inject_user():
+    return {"current_user": current_user()}
+
+# Pages anyone can open without logging in
+PUBLIC_ENDPOINTS = {"login", "signup", "static"}
+
+@app.before_request
+def require_login():
+    if request.endpoint in PUBLIC_ENDPOINTS or request.endpoint is None:
+        return None
+    uid = session.get("user_id")
+    if uid and get_db().execute("SELECT 1 FROM users WHERE id = ?", (uid,)).fetchone():
+        return None
+    session.clear()  # logged out, or account no longer exists
+    if request.path.startswith("/api/"):
+        return jsonify({"error": "Please log in first."}), 401
+    return redirect(url_for("login", next=request.path))
+
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("user_id"):
+            return redirect(url_for("login", next=request.path))
+        return view(*args, **kwargs)
+    return wrapped
+
+def safe_next(target):
+    # only allow redirects to pages inside this site
+    if target and target.startswith("/") and not target.startswith("//"):
+        return target
+    return url_for("index")
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if session.get("user_id"):
+        return redirect(url_for("index"))
+    error, form = None, {}
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm", "")
+        form = {"name": name, "email": email}
+        db = get_db()
+        if not name or len(name) > 60:
+            error = "Please enter your name (up to 60 characters)."
+        elif not EMAIL_RE.match(email):
+            error = "Please enter a valid email address."
+        elif len(password) < 8:
+            error = "Password must be at least 8 characters."
+        elif password != confirm:
+            error = "Passwords do not match."
+        elif db.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+            error = "An account with this email already exists. Try logging in."
+        else:
+            cur = db.execute(
+                "INSERT INTO users (name, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
+                (name, email, generate_password_hash(password),
+                 datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")),
+            )
+            db.commit()
+            session.clear()
+            session["user_id"] = cur.lastrowid
+            return redirect(url_for("index"))
+    return render_template("signup.html", error=error, form=form, demo_mode=DEMO_MODE)
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if session.get("user_id"):
+        return redirect(url_for("index"))
+    error, email = None, ""
+    nxt = request.values.get("next", "")
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        user = get_db().execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        if user and check_password_hash(user["password_hash"], password):
+            session.clear()
+            session["user_id"] = user["id"]
+            return redirect(safe_next(nxt))
+        error = "Incorrect email or password."
+    return render_template("login.html", error=error, email=email, next=nxt, demo_mode=DEMO_MODE)
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
+
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    user = current_user()
+    if user is None:  # account was deleted but cookie remained
+        session.clear()
+        return redirect(url_for("login"))
+    db = get_db()
+    msg = error = None
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "name":
+            name = request.form.get("name", "").strip()
+            if not name or len(name) > 60:
+                error = "Please enter a name (up to 60 characters)."
+            else:
+                db.execute("UPDATE users SET name = ? WHERE id = ?", (name, user["id"]))
+                db.commit()
+                msg = "Name updated."
+        elif action == "password":
+            row = db.execute("SELECT password_hash FROM users WHERE id = ?", (user["id"],)).fetchone()
+            old = request.form.get("old_password", "")
+            new = request.form.get("new_password", "")
+            if not check_password_hash(row["password_hash"], old):
+                error = "Current password is incorrect."
+            elif len(new) < 8:
+                error = "New password must be at least 8 characters."
+            else:
+                db.execute("UPDATE users SET password_hash = ? WHERE id = ?",
+                           (generate_password_hash(new), user["id"]))
+                db.commit()
+                msg = "Password changed."
+        user = current_user()
+    reports = db.execute(
+        "SELECT id, created_at, startup_name, snippet, demo_mode FROM reports "
+        "WHERE user_id = ? ORDER BY id DESC", (user["id"],)
+    ).fetchall()
+    return render_template("profile.html", user=user, reports=reports,
+                           msg=msg, error=error, demo_mode=DEMO_MODE)
 
 
 # ── Entry point ────────────────────────────────────────────────────────────
