@@ -363,13 +363,18 @@ def call_gemini(text: str) -> dict:
 
     else:
         model = genai_legacy.GenerativeModel(
-<<<<<<< HEAD
-            "gemini-flash-latest"
+
+            model_name,
+            generation_config={
+                "response_mime_type": "application/json",
+                "temperature": 0.2,
+                "max_output_tokens": 4096,
+            },
         )
 
         response = model.generate_content(
             prompt,
-            request_options={"timeout": 90},
+            request_options={"timeout": 60},
         )
 
         raw = response.text.strip()
@@ -380,35 +385,13 @@ def call_gemini(text: str) -> dict:
         raw,
         flags=re.IGNORECASE,
     )
-=======
-            model_name,
-            generation_config={
-                "response_mime_type": "application/json",
-                "temperature": 0.2,
-                "max_output_tokens": 4096,
-            },
-        )
-        response = model.generate_content(
-            prompt,
-            request_options={"timeout": 60},
-        )
-        raw = response.text.strip()
 
-    raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.IGNORECASE)
->>>>>>> 0a011db (Fix Gemini API timeout)
     raw = re.sub(r"\s*```$", "", raw)
 
     return json.loads(raw)
 
 
-<<<<<<< HEAD
-# --------------------------------------------------
-# ANALYZE RESEARCH AND SAVE REPORT
-# --------------------------------------------------
 
-=======
-# ── API routes ─────────────────────────────────────────────────────────────
->>>>>>> 0a011db (Fix Gemini API timeout)
 @app.route("/api/analyze", methods=["POST"])
 def api_analyze():
     try:
