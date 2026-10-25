@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyze – Venture Forge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2 L20 12 L30 10 L22 18 L26 28 L16 22 L6 28 L10 18 L2 10 L12 12 Z" fill="url(#fg2)"/>
+          <defs>
+            <linearGradient id="fg2" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ff7a18"/>
+              <stop offset="100%" stop-color="#ffb347"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Venture Forge <span class="accent">AI</span></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/analyze" class="active">Analyze</a></li>
+        <li><a href="/history">History</a></li>
+        <li><a href="/analyze" class="btn-nav">Start Analyzing</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  {% if demo_mode %}
+  <div class="demo-banner">
+    🧪 <strong>Demo Mode</strong> – No Gemini API key. A sample report will be generated.
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free key →</a>
+  </div>
+  {% endif %}
+
+  <main class="page-main">
+    <div class="container page-container">
+      <div class="page-header">
+        <h1>Analyze Your Research</h1>
+        <p class="page-sub">Upload a research paper PDF <strong>or</strong> type your idea below. We'll generate a complete startup concept report.</p>
+      </div>
+
+      <!-- ERROR ALERT -->
+      <div class="alert alert-error hidden" id="errorAlert">
+        <span class="alert-icon">⚠️</span>
+        <span id="errorMsg">Something went wrong.</span>
+        <button class="alert-close" onclick="document.getElementById('errorAlert').classList.add('hidden')">✕</button>
+      </div>
+
+      <form id="analyzeForm" class="analyze-form" novalidate>
+        <!-- PDF UPLOAD -->
+        <div class="form-section glass-card">
+          <h2 class="form-section-title">
+            <span class="step-badge">Option A</span>
+            Upload a Research Paper PDF
+          </h2>
+          <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Click or drag a PDF file here">
+            <div class="dz-icon">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <rect width="48" height="48" rx="12" fill="rgba(255,122,24,0.1)"/>
+                <path d="M24 14 L24 30 M16 22 L24 14 L32 22" stroke="#ff7a18" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M14 36 L34 36" stroke="#ff7a18" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <p class="dz-text">Drag &amp; drop your PDF here, or <span class="dz-link">click to browse</span></p>
+            <p class="dz-hint">PDF only • Max 10 MB</p>
+            <input type="file" id="pdfInput" name="pdf" accept=".pdf" class="dz-input" />
+          </div>
+          <div class="file-preview hidden" id="filePreview">
+            <span class="file-icon">📄</span>
+            <span id="fileName" class="file-name"></span>
+            <span id="fileSize" class="file-size"></span>
+            <button type="button" class="file-remove" id="fileRemove" aria-label="Remove file">✕</button>
+          </div>
+        </div>
+
+        <!-- DIVIDER -->
+        <div class="or-divider"><span>OR</span></div>
+
+        <!-- TEXT INPUT -->
+        <div class="form-section glass-card">
+          <h2 class="form-section-title">
+            <span class="step-badge">Option B</span>
+            Describe Your Research Idea
+          </h2>
+          <textarea
+            id="ideaText"
+            name="idea_text"
+            class="idea-textarea"
+            rows="8"
+            maxlength="15000"
+            placeholder="Example: A deep learning system that detects early signs of diabetic retinopathy from retinal fundus images using a lightweight CNN model suitable for deployment in low-resource clinics…"
+          ></textarea>
+          <div class="textarea-footer">
+            <span id="charCount" class="char-count">0 / 15,000 characters</span>
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <button type="submit" class="btn btn-primary btn-xl submit-btn" id="submitBtn">
+          <span class="btn-text">✦ Generate Startup Opportunity</span>
+        </button>
+      </form>
+
+      <!-- LOADING OVERLAY -->
+      <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-card glass-card">
+          <div class="loading-spinner"></div>
+          <p class="loading-msg" id="loadingMsg">Initializing…</p>
+          <div class="loading-steps">
+            <div class="ls-step" id="ls1">📄 Reading paper…</div>
+            <div class="ls-step" id="ls2">🔍 Identifying problem…</div>
+            <div class="ls-step" id="ls3">💡 Generating startup concept…</div>
+            <div class="ls-step" id="ls4">📊 Structuring report…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer footer-simple">
+    <div class="container footer-inner">
+      <p class="footer-disclaimer">⚠️ AI-generated ideas should be independently validated for accuracy, market demand and revenue potential.</p>
+      <p class="footer-copy">© 2026 Venture Forge AI</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+  <script>
+    // Analyze page specific JS (inline for clarity)
+    const form = document.getElementById('analyzeForm');
+    const dropZone = document.getElementById('dropZone');
+    const pdfInput = document.getElementById('pdfInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileRemove = document.getElementById('fileRemove');
+    const ideaText = document.getElementById('ideaText');
+    const charCount = document.getElementById('charCount');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMsg = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    let selectedFile = null;
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorAlert.classList.remove('hidden');
+      errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function hideError() {
+      errorAlert.classList.add('hidden');
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function setFile(file) {
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        showError('Only PDF files are accepted.');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        showError('File exceeds the 10 MB size limit.');
+        return;
+      }
+      hideError();
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileSize.textContent = formatBytes(file.size);
+      filePreview.classList.remove('hidden');
+      dropZone.classList.add('dz-has-file');
+    }
+
+    dropZone.addEventListener('click', () => pdfInput.click());
+    dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') pdfInput.click(); });
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dz-active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dz-active'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dz-active');
+      const file = e.dataTransfer.files[0];
+      if (file) setFile(file);
+    });
+
+    pdfInput.addEventListener('change', () => {
+      if (pdfInput.files[0]) setFile(pdfInput.files[0]);
+    });
+
+    fileRemove.addEventListener('click', () => {
+      selectedFile = null;
+      pdfInput.value = '';
+      filePreview.classList.add('hidden');
+      dropZone.classList.remove('dz-has-file');
+    });
+
+    ideaText.addEventListener('input', () => {
+      charCount.textContent = ideaText.value.length.toLocaleString() + ' / 15,000 characters';
+    });
+
+    // Loading steps animation
+    function runLoadingSteps() {
+      const steps = ['ls1', 'ls2', 'ls3', 'ls4'];
+      let i = 0;
+      steps.forEach(id => document.getElementById(id).classList.remove('active', 'done'));
+      function next() {
+        if (i < steps.length) {
+          if (i > 0) document.getElementById(steps[i - 1]).classList.add('done');
+          document.getElementById(steps[i]).classList.add('active');
+          i++;
+          setTimeout(next, 2200);
+        }
+      }
+      next();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+
+      if (!selectedFile && !ideaText.value.trim()) {
+        showError('Please upload a PDF or enter a research idea before generating.');
+        return;
+      }
+
+      const fd = new FormData();
+      if (selectedFile) {
+        fd.append('pdf', selectedFile);
+      } else {
+        fd.append('idea_text', ideaText.value.trim());
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.btn-text').textContent = 'Analyzing…';
+      loadingOverlay.classList.remove('hidden');
+      runLoadingSteps();
+
+      try {
+        const res = await fetch('/api/analyze', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Server error. Please try again.');
+        }
+
+        window.location.href = '/report/' + data.report_id;
+      } catch (err) {
+        loadingOverlay.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.querySelector('.btn-text').textContent = '✦ Generate Startup Opportunity';
+        showError(err.message);
+      }
+    });
+  </script>
+</body>
+</html>

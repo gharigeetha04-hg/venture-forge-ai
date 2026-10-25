@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History – Venture Forge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2 L20 12 L30 10 L22 18 L26 28 L16 22 L6 28 L10 18 L2 10 L12 12 Z" fill="url(#fg4)"/>
+          <defs>
+            <linearGradient id="fg4" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ff7a18"/>
+              <stop offset="100%" stop-color="#ffb347"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Venture Forge <span class="accent">AI</span></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/analyze">Analyze</a></li>
+        <li><a href="/history" class="active">History</a></li>
+        <li><a href="/analyze" class="btn-nav">Start Analyzing</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  {% if demo_mode %}
+  <div class="demo-banner">
+    🧪 <strong>Demo Mode</strong> – Reports below are from demo runs.
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free key →</a>
+  </div>
+  {% endif %}
+
+  <main class="page-main">
+    <div class="container page-container">
+      <div class="page-header history-header">
+        <div>
+          <h1>Report History</h1>
+          <p class="page-sub">All your past startup concept reports, stored locally.</p>
+        </div>
+        <a href="/analyze" class="btn btn-primary">+ New Analysis</a>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-row" id="histLoading">
+        <div class="loading-spinner"></div>
+        <span>Loading reports…</span>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state hidden" id="emptyState">
+        <div class="empty-icon">📂</div>
+        <h2>No reports yet</h2>
+        <p>Start by analyzing a research paper or idea.</p>
+        <a href="/analyze" class="btn btn-primary">Analyze Now →</a>
+      </div>
+
+      <!-- Reports list -->
+      <div class="history-list hidden" id="historyList"></div>
+    </div>
+  </main>
+
+  <!-- Confirm delete modal -->
+  <div class="modal-overlay hidden" id="deleteModal">
+    <div class="modal-card glass-card">
+      <h3>Delete Report?</h3>
+      <p>Are you sure you want to delete <strong id="deleteReportName"></strong>? This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelDelete">Cancel</button>
+        <button class="btn btn-danger" id="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer footer-simple">
+    <div class="container footer-inner">
+      <p class="footer-disclaimer">⚠️ AI-generated ideas should be independently validated for accuracy, market demand and revenue potential.</p>
+      <p class="footer-copy">© 2026 Venture Forge AI</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+  <script>
+    let deleteTargetId = null;
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/reports');
+        const reports = await res.json();
+        document.getElementById('histLoading').classList.add('hidden');
+
+        if (!reports.length) {
+          document.getElementById('emptyState').classList.remove('hidden');
+          return;
+        }
+
+        const list = document.getElementById('historyList');
+        list.classList.remove('hidden');
+        list.innerHTML = '';
+
+        reports.forEach(rep => {
+          const date = new Date(rep.created_at + ' UTC');
+          const dateStr = date.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+          const timeStr = date.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+          const inputIcon = rep.input_type === 'pdf' ? '📄' : '💬';
+          const demoTag = rep.demo_mode ? '<span class="tag-demo">Demo</span>' : '';
+
+          const card = document.createElement('div');
+          card.className = 'history-card glass-card';
+          card.innerHTML = `
+            <a href="/report/${rep.id}" class="history-card-link">
+              <div class="hc-meta">
+                <span class="hc-date">${dateStr} · ${timeStr}</span>
+                <span class="hc-type" title="${rep.input_type === 'pdf' ? 'From PDF' : 'From text'}">${inputIcon}</span>
+                ${demoTag}
+              </div>
+              <h3 class="hc-title">${escapeHtml(rep.startup_name)}</h3>
+              <p class="hc-snippet">${escapeHtml(rep.snippet || '')}</p>
+            </a>
+            <button class="hc-delete" data-id="${rep.id}" data-name="${escapeHtml(rep.startup_name)}" aria-label="Delete report">🗑</button>
+          `;
+          list.appendChild(card);
+        });
+
+        list.querySelectorAll('.hc-delete').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            deleteTargetId = parseInt(btn.dataset.id);
+            document.getElementById('deleteReportName').textContent = btn.dataset.name;
+            document.getElementById('deleteModal').classList.remove('hidden');
+          });
+        });
+
+      } catch (err) {
+        document.getElementById('histLoading').classList.add('hidden');
+        document.getElementById('emptyState').classList.remove('hidden');
+        document.querySelector('#emptyState p').textContent = 'Failed to load reports. Please refresh.';
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    document.getElementById('cancelDelete').addEventListener('click', () => {
+      document.getElementById('deleteModal').classList.add('hidden');
+      deleteTargetId = null;
+    });
+
+    document.getElementById('confirmDelete').addEventListener('click', async () => {
+      if (!deleteTargetId) return;
+      try {
+        await fetch(`/api/reports/${deleteTargetId}`, { method: 'DELETE' });
+        document.getElementById('deleteModal').classList.add('hidden');
+        deleteTargetId = null;
+        loadHistory();
+      } catch (err) {
+        alert('Delete failed. Please try again.');
+      }
+    });
+
+    document.getElementById('deleteModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('deleteModal')) {
+        document.getElementById('deleteModal').classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadHistory);
+  </script>
+</body>
+</html>

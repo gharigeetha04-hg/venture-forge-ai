@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Startup Report – Venture Forge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- NAVBAR (hidden in print) -->
+  <nav class="navbar no-print" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2 L20 12 L30 10 L22 18 L26 28 L16 22 L6 28 L10 18 L2 10 L12 12 Z" fill="url(#fg3)"/>
+          <defs>
+            <linearGradient id="fg3" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ff7a18"/>
+              <stop offset="100%" stop-color="#ffb347"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Venture Forge <span class="accent">AI</span></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/analyze">Analyze</a></li>
+        <li><a href="/history">History</a></li>
+        <li><a href="/analyze" class="btn-nav">New Analysis</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  {% if demo_mode %}
+  <div class="demo-banner no-print">
+    🧪 <strong>Demo Mode</strong> – This is a sample report. Add a Gemini API key for real analysis.
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free key →</a>
+  </div>
+  {% endif %}
+
+  <!-- Loading state -->
+  <div class="page-loading" id="pageLoading">
+    <div class="loading-spinner large"></div>
+    <p>Loading report…</p>
+  </div>
+
+  <!-- Report content (hidden until loaded) -->
+  <main class="page-main hidden" id="reportMain">
+    <div class="container page-container">
+
+      <!-- Report actions (no-print) -->
+      <div class="report-actions no-print">
+        <a href="/analyze" class="btn btn-ghost">← New Analysis</a>
+        <div class="report-action-btns">
+          <button class="btn btn-secondary" id="copyBtn">📋 Copy Report</button>
+          <button class="btn btn-secondary" id="printBtn">📥 Download PDF</button>
+        </div>
+      </div>
+
+      <!-- Print header -->
+      <div class="print-header print-only">
+        <div class="print-logo">Venture Forge AI</div>
+        <div class="print-date" id="printDate"></div>
+      </div>
+
+      <!-- Demo badge -->
+      <div class="demo-badge hidden no-print" id="demoBadge">🧪 Demo Report</div>
+
+      <!-- STARTUP HEADER CARD -->
+      <div class="report-hero glass-card">
+        <div class="startup-badge">🚀 Startup Concept</div>
+        <h1 class="startup-name" id="startupName">—</h1>
+        <p class="startup-desc" id="startupDesc">—</p>
+      </div>
+
+      <!-- RESEARCH SUMMARY -->
+      <section class="report-section">
+        <h2 class="report-section-title">
+          <span class="rs-icon">🔬</span> Research Summary
+        </h2>
+        <div class="cards-grid two-col">
+          <div class="glass-card rs-card">
+            <div class="rs-label">Main Idea</div>
+            <p id="rsMainIdea">—</p>
+          </div>
+          <div class="glass-card rs-card">
+            <div class="rs-label">Technology Used</div>
+            <p id="rsTechnology">—</p>
+          </div>
+          <div class="glass-card rs-card">
+            <div class="rs-label">Problem Solved</div>
+            <p id="rsProblem">—</p>
+          </div>
+          <div class="glass-card rs-card">
+            <div class="rs-label">Other Application Fields</div>
+            <ul class="tag-list" id="rsOtherFields"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- STARTUP DETAILS GRID -->
+      <section class="report-section">
+        <h2 class="report-section-title">
+          <span class="rs-icon">💼</span> Startup Concept Details
+        </h2>
+        <div class="details-grid">
+          <div class="glass-card detail-card">
+            <div class="dc-label">🎯 Problem Statement</div>
+            <p id="problemStatement">—</p>
+          </div>
+          <div class="glass-card detail-card">
+            <div class="dc-label">💡 Proposed Solution</div>
+            <p id="proposedSolution">—</p>
+          </div>
+          <div class="glass-card detail-card">
+            <div class="dc-label">👥 Target Customers</div>
+            <p id="targetCustomers">—</p>
+          </div>
+          <div class="glass-card detail-card">
+            <div class="dc-label">✨ Unique Value Proposition</div>
+            <p id="uvp">—</p>
+          </div>
+          <div class="glass-card detail-card full-width">
+            <div class="dc-label">💰 Revenue Model</div>
+            <p id="revenueModel">—</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- MVP FEATURES -->
+      <section class="report-section">
+        <h2 class="report-section-title">
+          <span class="rs-icon">🛠️</span> MVP Features
+        </h2>
+        <div class="glass-card list-card">
+          <ul class="feature-list" id="mvpFeatures"></ul>
+        </div>
+      </section>
+
+      <!-- CHALLENGES & RISKS -->
+      <section class="report-section">
+        <h2 class="report-section-title">
+          <span class="rs-icon">⚠️</span> Challenges &amp; Risks
+        </h2>
+        <div class="glass-card list-card">
+          <ul class="risk-list" id="challengesList"></ul>
+        </div>
+      </section>
+
+      <!-- NEXT STEPS -->
+      <section class="report-section">
+        <h2 class="report-section-title">
+          <span class="rs-icon">🗓️</span> Suggested Next Steps
+        </h2>
+        <div class="glass-card list-card">
+          <ol class="steps-list" id="nextSteps"></ol>
+        </div>
+      </section>
+
+      <!-- DISCLAIMER -->
+      <div class="disclaimer-card glass-card">
+        <span class="disclaimer-icon">⚠️</span>
+        <div>
+          <strong>Disclaimer:</strong> AI-generated ideas should be independently validated for accuracy,
+          market demand and revenue potential. This report is a starting point for exploration,
+          not a substitute for market research, expert consultation, or business validation.
+        </div>
+      </div>
+
+      <!-- ACTIONS bottom -->
+      <div class="report-actions no-print" style="margin-top:2rem;">
+        <a href="/history" class="btn btn-ghost">📂 View All Reports</a>
+        <div class="report-action-btns">
+          <button class="btn btn-secondary" id="copyBtn2">📋 Copy Report</button>
+          <button class="btn btn-secondary" id="printBtn2">📥 Download PDF</button>
+          <a href="/analyze" class="btn btn-primary">✦ New Analysis</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Error state -->
+  <div class="page-error hidden" id="pageError">
+    <div class="glass-card error-card">
+      <div class="error-icon">😕</div>
+      <h2>Report Not Found</h2>
+      <p id="pageErrorMsg">This report may have been deleted.</p>
+      <a href="/history" class="btn btn-primary">View All Reports</a>
+    </div>
+  </div>
+
+  <footer class="footer footer-simple no-print">
+    <div class="container footer-inner">
+      <p class="footer-disclaimer">⚠️ AI-generated ideas should be independently validated for accuracy, market demand and revenue potential.</p>
+      <p class="footer-copy">© 2026 Venture Forge AI</p>
+    </div>
+  </footer>
+
+  <script>
+    const REPORT_ID = {{ report_id }};
+
+    function setText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val || '—';
+    }
+
+    function makeListItems(ulEl, items, icon) {
+      if (!ulEl || !items) return;
+      ulEl.innerHTML = '';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        if (icon) {
+          const sp = document.createElement('span');
+          sp.className = 'li-icon';
+          sp.textContent = icon;
+          li.appendChild(sp);
+        }
+        li.appendChild(document.createTextNode(item));
+        ulEl.appendChild(li);
+      });
+    }
+
+    function makeTags(ulEl, items) {
+      if (!ulEl || !items) return;
+      ulEl.innerHTML = '';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'tag';
+        li.textContent = item;
+        ulEl.appendChild(li);
+      });
+    }
+
+    function buildCopyText(data) {
+      const s = data.startup || {};
+      const r = data.research_summary || {};
+      const lines = [
+        `VENTURE FORGE AI – STARTUP CONCEPT REPORT`,
+        `Generated: ${new Date().toLocaleDateString()}`,
+        ``,
+        `STARTUP: ${s.name || ''}`,
+        `${s.description || ''}`,
+        ``,
+        `== RESEARCH SUMMARY ==`,
+        `Main Idea: ${r.main_idea || ''}`,
+        `Technology: ${r.technology || ''}`,
+        `Problem Solved: ${r.problem_solved || ''}`,
+        `Other Fields: ${(r.other_application_fields || []).join(', ')}`,
+        ``,
+        `== STARTUP DETAILS ==`,
+        `Problem Statement: ${s.problem_statement || ''}`,
+        `Proposed Solution: ${s.proposed_solution || ''}`,
+        `Target Customers: ${s.target_customers || ''}`,
+        `Unique Value Proposition: ${s.unique_value_proposition || ''}`,
+        `Revenue Model: ${s.revenue_model || ''}`,
+        ``,
+        `== MVP FEATURES ==`,
+        ...(s.mvp_features || []).map((f, i) => `${i + 1}. ${f}`),
+        ``,
+        `== CHALLENGES & RISKS ==`,
+        ...(s.challenges_and_risks || []).map((c, i) => `${i + 1}. ${c}`),
+        ``,
+        `== NEXT STEPS ==`,
+        ...(s.next_steps || []).map((n, i) => `${i + 1}. ${n}`),
+        ``,
+        `---`,
+        `Disclaimer: AI-generated ideas should be independently validated for accuracy, market demand and revenue potential.`,
+      ];
+      return lines.join('\n');
+    }
+
+    async function loadReport() {
+      try {
+        const res = await fetch(`/api/reports/${REPORT_ID}`);
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          document.getElementById('pageLoading').classList.add('hidden');
+          document.getElementById('pageError').classList.remove('hidden');
+          document.getElementById('pageErrorMsg').textContent = data.error || 'Report not found.';
+          return;
+        }
+
+        const report = data.report_json;
+        const s = report.startup || {};
+        const r = report.research_summary || {};
+
+        if (data.demo_mode) {
+          document.getElementById('demoBadge').classList.remove('hidden');
+        }
+
+        setText('startupName', s.name);
+        setText('startupDesc', s.description);
+        setText('rsMainIdea', r.main_idea);
+        setText('rsTechnology', r.technology);
+        setText('rsProblem', r.problem_solved);
+        makeTags(document.getElementById('rsOtherFields'), r.other_application_fields);
+
+        setText('problemStatement', s.problem_statement);
+        setText('proposedSolution', s.proposed_solution);
+        setText('targetCustomers', s.target_customers);
+        setText('uvp', s.unique_value_proposition);
+        setText('revenueModel', s.revenue_model);
+
+        makeListItems(document.getElementById('mvpFeatures'), s.mvp_features, '✅');
+        makeListItems(document.getElementById('challengesList'), s.challenges_and_risks, '⚠️');
+        makeListItems(document.getElementById('nextSteps'), s.next_steps);
+
+        document.title = `${s.name || 'Report'} – Venture Forge AI`;
+        document.getElementById('printDate').textContent = `Generated: ${new Date(data.created_at + ' UTC').toLocaleDateString()}`;
+
+        document.getElementById('pageLoading').classList.add('hidden');
+        document.getElementById('reportMain').classList.remove('hidden');
+
+        // Copy buttons
+        const copyText = buildCopyText(report);
+        document.getElementById('copyBtn').addEventListener('click', () => copyToClipboard(copyText));
+        document.getElementById('copyBtn2').addEventListener('click', () => copyToClipboard(copyText));
+        document.getElementById('printBtn').addEventListener('click', () => window.print());
+        document.getElementById('printBtn2').addEventListener('click', () => window.print());
+
+      } catch (err) {
+        document.getElementById('pageLoading').classList.add('hidden');
+        document.getElementById('pageError').classList.remove('hidden');
+        document.getElementById('pageErrorMsg').textContent = 'Failed to load the report. Please try again.';
+      }
+    }
+
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Report copied to clipboard!');
+      } catch {
+        showToast('Copy failed. Please select and copy manually.', true);
+      }
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.createElement('div');
+      t.className = 'toast' + (isError ? ' toast-error' : '');
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.classList.add('toast-show'), 10);
+      setTimeout(() => { t.classList.remove('toast-show'); setTimeout(() => t.remove(), 400); }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadReport);
+  </script>
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

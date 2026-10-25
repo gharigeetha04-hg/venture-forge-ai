@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Venture Forge AI – Forge Research into Ventures</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-label="Venture Forge AI logo">
+          <path d="M16 2 L20 12 L30 10 L22 18 L26 28 L16 22 L6 28 L10 18 L2 10 L12 12 Z" fill="url(#flame-grad)" />
+          <defs>
+            <linearGradient id="flame-grad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ff7a18"/>
+              <stop offset="100%" stop-color="#ffb347"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Venture Forge <span class="accent">AI</span></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/" class="active">Home</a></li>
+        <li><a href="/analyze">Analyze</a></li>
+        <li><a href="/history">History</a></li>
+        <li><a href="/analyze" class="btn-nav">Start Analyzing</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  {% if demo_mode %}
+  <div class="demo-banner">
+    🧪 <strong>Demo Mode</strong> – No Gemini API key detected. Sample reports are returned.
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free key →</a>
+  </div>
+  {% endif %}
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-bg-glow"></div>
+    <div class="container hero-content">
+      <div class="hero-badge">✦ AI-Powered Startup Discovery</div>
+      <h1 class="hero-title">Forge Your Research<br/>Into a <span class="gradient-text">Venture</span></h1>
+      <p class="hero-sub">
+        Upload a research paper or describe your idea. Our AI analyzes the science and
+        hands you a complete startup concept — problem, solution, customers, revenue
+        model, MVP and next steps. Instantly.
+      </p>
+      <div class="hero-actions">
+        <a href="/analyze" class="btn btn-primary btn-lg">Start Analyzing →</a>
+        <a href="#how-it-works" class="btn btn-ghost btn-lg">See how it works</a>
+      </div>
+      <p class="hero-note">No signup required • Works in Demo Mode without an API key</p>
+    </div>
+    <div class="hero-visual">
+      <div class="floating-card fc1">
+        <span class="fc-icon">🔬</span>
+        <div>
+          <div class="fc-title">Research Paper</div>
+          <div class="fc-sub">ML-based crop disease detection</div>
+        </div>
+      </div>
+      <div class="floating-card fc2">
+        <span class="fc-icon">🚀</span>
+        <div>
+          <div class="fc-title">Startup Concept</div>
+          <div class="fc-sub">CropSense AI – AgriTech SaaS</div>
+        </div>
+      </div>
+      <div class="floating-card fc3">
+        <span class="fc-icon">💡</span>
+        <div>
+          <div class="fc-title">MVP Features</div>
+          <div class="fc-sub">6 features identified</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM SECTION -->
+  <section class="section" id="problems">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">The Problem</div>
+        <h2>Why Most Research Never Becomes a Product</h2>
+        <p class="section-sub">Brilliant ideas get lost between the lab bench and the market.</p>
+      </div>
+      <div class="cards-grid four-col">
+        <div class="problem-card glass-card reveal">
+          <div class="problem-icon">📄</div>
+          <h3>Hard to Understand</h3>
+          <p>Research papers are dense with jargon. Translating academic writing into actionable business insight is a skill most researchers never learn.</p>
+        </div>
+        <div class="problem-card glass-card reveal">
+          <div class="problem-icon">🗺️</div>
+          <h3>No Business Plan</h3>
+          <p>An idea without a structured business plan is just a dream. Most students and researchers have no training in commercialization or startup strategy.</p>
+        </div>
+        <div class="problem-card glass-card reveal">
+          <div class="problem-icon">⏱️</div>
+          <h3>Market Research Takes Forever</h3>
+          <p>Identifying target customers, competitors, and revenue models can take weeks of research — time researchers simply don't have.</p>
+        </div>
+        <div class="problem-card glass-card reveal">
+          <div class="problem-icon">🧭</div>
+          <h3>No Guidance from Lab to Launch</h3>
+          <p>There's no clear roadmap between "we have results" and "we have a company." Most researchers don't know what the next step even looks like.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section section-alt" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">The Process</div>
+        <h2>From Research to Startup in 4 Steps</h2>
+        <p class="section-sub">Our AI does in seconds what would take a business consultant weeks.</p>
+      </div>
+      <div class="steps-timeline">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <div class="step-body glass-card">
+            <div class="step-icon">📤</div>
+            <h3>Upload or Enter Your Idea</h3>
+            <p>Drag-and-drop a research paper PDF (up to 10 MB) or simply type your research idea or abstract into the text box.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <div class="step-body glass-card">
+            <div class="step-icon">🤖</div>
+            <h3>AI Analysis</h3>
+            <p>Our backend extracts the text and sends it to Google Gemini, which analyzes the technology, problem, novelty, and application fields.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <div class="step-body glass-card">
+            <div class="step-icon">💼</div>
+            <h3>Startup Concept Generation</h3>
+            <p>Gemini constructs a complete startup concept: name, solution, target market, unique value, revenue model, and MVP scope — all structured and readable.</p>
+          </div>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">04</div>
+          <div class="step-body glass-card">
+            <div class="step-icon">📊</div>
+            <h3>Structured Report</h3>
+            <p>Download or copy your complete startup opportunity report. Revisit it anytime from your History page.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">Features</div>
+        <h2>Everything You Need to Kickstart a Venture</h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-item reveal">
+          <div class="feature-icon">🔍</div>
+          <h4>Research Summary</h4>
+          <p>Instantly understand what a paper is about — main idea, technology, and problem solved.</p>
+        </div>
+        <div class="feature-item reveal">
+          <div class="feature-icon">🏷️</div>
+          <h4>Startup Naming</h4>
+          <p>Get a catchy, memorable startup name derived from the core technology and market.</p>
+        </div>
+        <div class="feature-item reveal">
+          <div class="feature-icon">🎯</div>
+          <h4>Target Customer Profile</h4>
+          <p>Know exactly who your customers are before writing a single line of product code.</p>
+        </div>
+        <div class="feature-item reveal">
+          <div class="feature-icon">💰</div>
+          <h4>Revenue Model</h4>
+          <p>Multiple monetisation strategies suggested based on the nature of the technology.</p>
+        </div>
+        <div class="feature-item reveal">
+          <div class="feature-icon">🛠️</div>
+          <h4>MVP Feature List</h4>
+          <p>A practical list of the minimum features needed to launch your first version.</p>
+        </div>
+        <div class="feature-item reveal">
+          <div class="feature-icon">⚠️</div>
+          <h4>Challenges & Risks</h4>
+          <p>Understand the risks upfront so you can plan mitigation strategies early.</p>
+        </div>
+        <div class="feature-item reveal">
+          <div class="feature-icon">🗓️</div>
+          <h4>Next Steps</h4>
+          <p>A numbered action plan to move from concept to validation to launch.</p>
+        </div>
+        <div class="feature-item reveal">
+          <div class="feature-icon">📂</div>
+          <h4>Report History</h4>
+          <p>All your generated reports are saved locally and accessible from the History page.</p>
+        </div>
+        <div class="feature-item reveal">
+          <div class="feature-icon">📥</div>
+          <h4>Download as PDF</h4>
+          <p>Print or download your startup report as a clean PDF, ready to share or present.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHO IT'S FOR -->
+  <section class="section section-alt" id="for-who">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge">Audience</div>
+        <h2>Who Is Venture Forge AI For?</h2>
+      </div>
+      <div class="cards-grid three-col">
+        <div class="audience-card glass-card reveal">
+          <div class="aud-icon">🎓</div>
+          <h3>Engineering &amp; Science Students</h3>
+          <p>Turn your final-year project or mini-project into a startup pitch deck for innovation competitions and hackathons — even without a business background.</p>
+        </div>
+        <div class="audience-card glass-card reveal">
+          <div class="aud-icon">🔬</div>
+          <h3>Researchers &amp; Academics</h3>
+          <p>Explore the commercial potential of your published or unpublished work. Understand where your technology fits in the market landscape.</p>
+        </div>
+        <div class="audience-card glass-card reveal">
+          <div class="aud-icon">🌱</div>
+          <h3>Aspiring Entrepreneurs</h3>
+          <p>Discover startup ideas rooted in peer-reviewed science. Build on validated research instead of starting with a guess.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section cta-section">
+    <div class="container cta-inner">
+      <h2>Ready to Forge Your First Venture?</h2>
+      <p>It's free, it's instant, and no sign-up is required.</p>
+      <a href="/analyze" class="btn btn-primary btn-xl">Analyze a Paper or Idea →</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-logo">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2 L20 12 L30 10 L22 18 L26 28 L16 22 L6 28 L10 18 L2 10 L12 12 Z" fill="url(#flame-grad-f)"/>
+          <defs>
+            <linearGradient id="flame-grad-f" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ff7a18"/>
+              <stop offset="100%" stop-color="#ffb347"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Venture Forge AI</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="/">Home</a>
+        <a href="/analyze">Analyze</a>
+        <a href="/history">History</a>
+      </nav>
+      <p class="footer-disclaimer">
+        ⚠️ AI-generated ideas should be independently validated for accuracy, market demand and revenue potential.
+      </p>
+      <p class="footer-copy">© 2026 Venture Forge AI. Built with Flask &amp; Gemini.</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
