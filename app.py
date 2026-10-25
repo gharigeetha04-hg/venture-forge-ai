@@ -328,6 +328,7 @@ Do not return markdown or code fences.
 """
 
 
+
 def call_gemini(text):
     if not HAS_GENAI:
         raise RuntimeError("No Gemini SDK installed.")
@@ -337,15 +338,32 @@ def call_gemini(text):
         f"--- RESEARCH CONTENT ---\n{text}"
     )
 
+def call_gemini(text: str) -> dict:
+    if not HAS_GENAI:
+        raise RuntimeError("No Gemini SDK installed.")
+
+    # Limit very long research papers to reduce API processing time.
+    text = text[:20000]
+    prompt = f"{SYSTEM_PROMPT}\n\n--- RESEARCH CONTENT ---\n{text}"
+
+
+    model_name = "gemini-2.5-flash"
+
     if HAS_NEW_GENAI and _genai_client is not None:
         response = _genai_client.models.generate_content(
-            model="gemini-flash-latest",
+            model=model_name,
             contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "temperature": 0.2,
+                "max_output_tokens": 4096,
+            },
         )
         raw = response.text.strip()
 
     else:
         model = genai_legacy.GenerativeModel(
+<<<<<<< HEAD
             "gemini-flash-latest"
         )
 
@@ -362,15 +380,35 @@ def call_gemini(text):
         raw,
         flags=re.IGNORECASE,
     )
+=======
+            model_name,
+            generation_config={
+                "response_mime_type": "application/json",
+                "temperature": 0.2,
+                "max_output_tokens": 4096,
+            },
+        )
+        response = model.generate_content(
+            prompt,
+            request_options={"timeout": 60},
+        )
+        raw = response.text.strip()
+
+    raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.IGNORECASE)
+>>>>>>> 0a011db (Fix Gemini API timeout)
     raw = re.sub(r"\s*```$", "", raw)
 
     return json.loads(raw)
 
 
+<<<<<<< HEAD
 # --------------------------------------------------
 # ANALYZE RESEARCH AND SAVE REPORT
 # --------------------------------------------------
 
+=======
+# ── API routes ─────────────────────────────────────────────────────────────
+>>>>>>> 0a011db (Fix Gemini API timeout)
 @app.route("/api/analyze", methods=["POST"])
 def api_analyze():
     try:
