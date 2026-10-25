@@ -347,7 +347,7 @@ def call_gemini(text: str) -> dict:
     prompt = f"{SYSTEM_PROMPT}\n\n--- RESEARCH CONTENT ---\n{text}"
 
 
-    model_name = "gemini-3.8-flash"
+    model_name = "gemini-3.7-flash"
 
     if HAS_NEW_GENAI and _genai_client is not None:
         response = _genai_client.models.generate_content(
