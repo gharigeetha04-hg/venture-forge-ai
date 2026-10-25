@@ -44,7 +44,7 @@ HAS_GENAI = HAS_NEW_GENAI or HAS_LEGACY_GENAI
 
 # ── Configuration ──────────────────────────────────────────────────────────
 app = Flask(__name__)
-DATABASE = Path(__file__).parent / "database.db"
+DATABASE = Path("/tmp/database.db") if os.environ.get("VERCEL") else Path(__file__).parent / "database.db"
 MAX_TEXT_CHARS = 15_000  # send at most this many chars to Gemini
 MAX_PDF_BYTES = 10 * 1024 * 1024  # 10 MB
 
@@ -148,6 +148,8 @@ DEMO_REPORT = {
 # ── Database ───────────────────────────────────────────────────────────────
 def get_db():
     if "db" not in g:
+        if os.environ.get("VERCEL") and not Path(DATABASE).exists():
+            init_db()
         g.db = sqlite3.connect(DATABASE)
         g.db.row_factory = sqlite3.Row
     return g.db
