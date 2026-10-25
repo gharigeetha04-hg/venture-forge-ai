@@ -59,7 +59,7 @@ DEMO_MODE = not GEMINI_API_KEY
 if not DEMO_MODE and HAS_NEW_GENAI:
     _genai_client = new_genai.Client(api_key=GEMINI_API_KEY)
 elif not DEMO_MODE and HAS_LEGACY_GENAI:
-    genai_legacy.configure(api_key=GEMINI_API_KEY)
+    genai_legacy.configure(api_key=GEMINI_API_KEY, transport="rest")
     _genai_client = None
 else:
     _genai_client = None
@@ -272,7 +272,7 @@ def call_gemini(text: str) -> dict:
     else:
         # Legacy google-generativeai SDK
         model = genai_legacy.GenerativeModel("gemini-flash-latest")
-        response = model.generate_content(prompt)
+        response = model.generate_content(prompt, request_options={"timeout": 90})
         raw = response.text.strip()
 
     # strip markdown code fences if present
